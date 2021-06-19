@@ -18,10 +18,10 @@ function Avancar_Mes(){
             if(index == 11){
                 // Ativa a função para avançar um ano quando chegar em Dezembro
                 Trocar_de_Ano(1)
-                Exibir_Calendario_do_Mes(meses.dias_no_mes[0], true)
+                Exibir_Calendario_do_Mes(index, meses.dias_no_mes[11], meses.dias_no_mes[0],null, 1)
                 //console.log(meses.dias_no_mes[0])
             }else{
-                Exibir_Calendario_do_Mes(index, meses.dias_no_mes[index],meses.dias_no_mes[index + 1], null, false, 1)
+                Exibir_Calendario_do_Mes(index, meses.dias_no_mes[index],meses.dias_no_mes[index + 1], null, 1)
                 //console.log(meses.dias_no_mes[index + 1]) 
             }
         }
@@ -35,9 +35,9 @@ function Retornar_Mes(){
             if(index == 0){
                 // Ativa a função para retornar um ano quando chegar em Janeiro
                 Trocar_de_Ano(-1)
-                Exibir_Calendario_do_Mes(index, meses.dias_no_mes[0], meses.dias_no_mes[index], meses.dias_no_mes[Dois_Meses_Atras_dias_totais(index)], true, -1)
+                Exibir_Calendario_do_Mes(index, meses.dias_no_mes[0], meses.dias_no_mes[index], meses.dias_no_mes[Dois_Meses_Atras_dias_totais(index)], -1)
             }else{
-               Exibir_Calendario_do_Mes(index, meses.dias_no_mes[index],meses.dias_no_mes[index - 1], meses.dias_no_mes[Dois_Meses_Atras_dias_totais(index)], false, -1)
+               Exibir_Calendario_do_Mes(index, meses.dias_no_mes[index],meses.dias_no_mes[index - 1], meses.dias_no_mes[Dois_Meses_Atras_dias_totais(index)], -1)
             }  
         }
     })
@@ -65,7 +65,7 @@ function Dois_Meses_Atras_dias_totais(p){
     }
 }
 
-function Exibir_Calendario_do_Mes(index, dias_mes_atual, dias_totais, dias_dois_meses_atras, troca_ano, direcao){
+function Exibir_Calendario_do_Mes(index, dias_mes_atual, dias_totais, dias_dois_meses_atras, direcao){
     //index => quando clicado em avançar/retornar informa o indice do mes clicado
     //dias_mes_atual => quando clicado em avançar/retornar recebe o total de dias do mes que foi clicado.
     //dias_totais => recebe quantos dias tem no mes seguinte quando clicado em avançar, quando clicado em retornar informa o total de dias do mes anterior ao mes que sofreu evento de clique ocorreu.
@@ -106,7 +106,8 @@ function Exibir_Calendario_do_Mes(index, dias_mes_atual, dias_totais, dias_dois_
         var posicao_ultimo_dia_do_mes = 0
         for(let c = 0; c <= 12 ; c = c + 2){
             if(Number(document.getElementById("semana1").childNodes[c].innerHTML) == 1){
-                posicao_ultimo_dia_do_mes = c - 2
+                c - 2 < 0 ? posicao_ultimo_dia_do_mes = 12 : posicao_ultimo_dia_do_mes = c - 2;
+                //ultização de if Ternário, onde eu escrevo a condição, coloco ponto de interrogação, a primeira intrução é executada se a condição me satisfaz, senão é feita a intrução ordenada após os dois pontos (":").
             }
         }
        //Agora eu sei em qual dia da semana o ultimo dia do mes anterior corresponde, essa informação fica aramazenada em "posicao_ultimo_dia_do_mes" 
@@ -134,8 +135,6 @@ function Numero_da_Semana(d){
     }
 }
 function Completar_Calendario(index, dt, n, d, sentido_clique){
-    console.log(index + " index")
-    console.log(dt + " dt")
     /* 
     index => recebe o indice que indica o nome/quantos dias tem o mes anterior ao exibido na tela -> isto quando eu clico em avançar.
     Quando eu clico em retornar exibe o indice do mês que aparece na tela.
