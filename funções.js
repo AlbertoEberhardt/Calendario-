@@ -3,12 +3,35 @@ var meses = {
     dias_no_mes: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 }
 var TXTmes = ""
-var ano = 0
 function Iniciar_Eventos(){
     var prox_mes = document.getElementById("prox_mes")
     var ant_mes = document.getElementById("ant_mes")
+    var ano_label = document.getElementById("ano")
     prox_mes.addEventListener("click", Avancar_Mes)
     ant_mes.addEventListener("click", Retornar_Mes)
+    ano_label.addEventListener("dblclick", Selecao_de_ano)
+    Estilo_pre_pronto()
+    Abrir_no_mes_Atual(ano_label, prox_mes)
+}
+function Selecao_de_ano(){
+    var ano_digitado = Number(window.prompt("Digite o ano que voçê deseja"))
+    var diferenca = 0
+    var total = 0
+    if(ano_digitado != 0){
+        if( ano_digitado > Number(this.innerHTML)){
+            diferenca = ano_digitado - Number(this.innerHTML)
+            total = diferenca * 12
+            for (let s = 0; s < total; s++){
+                document.getElementById("prox_mes").click()
+            }
+        }else{
+            diferenca = Number(this.innerHTML) - ano_digitado
+            total = diferenca * 12
+            for (let s = 0; s < total; s++){
+                document.getElementById("ant_mes").click()
+            }
+        }
+    }
 }
 function Avancar_Mes(){
     TXTmes = mes.innerHTML + " "
@@ -19,10 +42,8 @@ function Avancar_Mes(){
                 // Ativa a função para avançar um ano quando chegar em Dezembro
                 Trocar_de_Ano(1)
                 Exibir_Calendario_do_Mes(index, meses.dias_no_mes[11], meses.dias_no_mes[0],null, 1)
-                //console.log(meses.dias_no_mes[0])
             }else{
                 Exibir_Calendario_do_Mes(index, meses.dias_no_mes[index],meses.dias_no_mes[index + 1], null, 1)
-                //console.log(meses.dias_no_mes[index + 1]) 
             }
         }
     })
@@ -53,6 +74,15 @@ function Trocar_de_Ano(indice){
         Label_ano.innerHTML = Number_ano + 1
         mes.innerHTML = meses.mes[0]
     }
+    Ano_bisexto(Number(Label_ano.innerHTML))
+}
+
+function Ano_bisexto(Ano){
+    if(Ano % 4 == 0){
+        meses.dias_no_mes.splice(1, 1, 29)
+    }else{
+        meses.dias_no_mes[1] = 28
+    }
 }
 
 function Dois_Meses_Atras_dias_totais(p){
@@ -70,37 +100,41 @@ function Exibir_Calendario_do_Mes(index, dias_mes_atual, dias_totais, dias_dois_
     //dias_mes_atual => quando clicado em avançar/retornar recebe o total de dias do mes que foi clicado.
     //dias_totais => recebe quantos dias tem no mes seguinte quando clicado em avançar, quando clicado em retornar informa o total de dias do mes anterior ao mes que sofreu evento de clique ocorreu.
     //dias_dois_meses_atras recebe o total de dias de dois meses atras, para caso necessário completar o calendário, quando o primeiro dia do mês não é um domingo.
-    // troca_ano recebe true caso a troca de ano
     //direcao  indica a direcao da troca de mes, 1= direita (próximo) e -1 = esquerda (anterior)
     // 42 elementos com a classe dia
     if(direcao == 1){
         var qual_Linha = []
         var qual_dia_semana = []
-        // dias_da_semana somente os numeros pares de 0 a 12 e representa os dias a semana (domingo, segunda, etc..)
+        // dias_da_semana somente os numeros pares de 0 a 12 representam os dias a semana (domingo, segunda, etc..)
         for (let c = 1; c <= 6; c++){
             for(let i = 0; i <= 12; i = i + 2){
                 if(Number(document.getElementById("semana" + c).childNodes[i].innerHTML) == dias_mes_atual){
                     qual_Linha.push(c)
                     qual_dia_semana.push(i)
-                    //Agora eu consigo identificar qual o dia da semana corresponde ao último dia do mês, assim como a posicao dele no calendario.
+                    //Agora eu consigo identificar qual o dia da semana corresponde ao último dia do mês, assim como a posicão dele no calendario.
                 }
             }
         }
         var dia = 1
         var N_da_Semana = Numero_da_Semana(Number(qual_dia_semana[qual_dia_semana.length-1]))
+        var identificar_fim = 0
+        var identificar_semana = 0
         for (var c = 1; c <= 6; c++){
             for(var i = N_da_Semana; i <= 12; i = i + 2){
                 document.getElementById("semana" + c).childNodes[i].innerHTML = dia
                 dia++
                 if(dia > dias_totais){
+                    identificar_fim = i
+                    identificar_semana = c
                     dia = 1
                 }
             }
             N_da_Semana = 0
         }
-        //console.log(dias_totais + " total de dias mes seguinte")
         N_da_Semana = Numero_da_Semana(Number(qual_dia_semana[qual_dia_semana.length-1]))
         Completar_Calendario(index, null, N_da_Semana, dias_mes_atual, 1)
+        Cinzar_dias_outro_mes(identificar_fim + 2, identificar_semana)
+        Estilo_Primeira_linha()
 
     }else if(direcao == -1){
         var posicao_ultimo_dia_do_mes = 0
@@ -145,6 +179,7 @@ function Completar_Calendario(index, dt, n, d, sentido_clique){
 
     d => recebe o total de dias do mes anterior, ao que aparece no calendario 
     */
+    var linha = 0
     if(sentido_clique == 1){
         for(let g = n - 2; g >= 0; g = g - 2){
             document.getElementById("semana1").childNodes[g].innerHTML = d
@@ -157,12 +192,15 @@ function Completar_Calendario(index, dt, n, d, sentido_clique){
             for(let c = 0; c <= 12; c = c + 2){
                 if(Number(document.getElementById("semana" + j).childNodes[c].innerHTML) == 1){
                     if(j == 1){
+                        //Se o dia primeiro já está na primeira linha...
                         for(let v = 4; v <= 6; v++){
                             for(let l = 0; l <= 12; l = l + 2){
                                 if(Number(document.getElementById("semana" + v).childNodes[l].innerHTML) == dt){
+                                    
                                     var contagem_dias = 1
-                                    var linha = v
+                                    linha = v
                                     var continuar_escrevendo_em = l + 2
+                                    Cinzar_dias_outro_mes(l + 2, v)
                                     for(let z = linha; z <= 6; z++){
                                         for(let x = continuar_escrevendo_em; x <= 12; x = x + 2){
                                             document.getElementById("semana" + z).childNodes[x].innerHTML = contagem_dias
@@ -175,6 +213,7 @@ function Completar_Calendario(index, dt, n, d, sentido_clique){
                         }
                         break
                     }else{
+                        // Se o dia primeiro não está na primeira linha...
                         var dia_da_semana = c
                         var backup_dia_da_semana = dia_da_semana
                         let dia = 1
@@ -189,8 +228,8 @@ function Completar_Calendario(index, dt, n, d, sentido_clique){
                                 document.getElementById("semana" + p).childNodes[g].innerHTML = dia
                                 dia++
                                 if(dia > meses.dias_no_mes[index-1]){
-                                    identificar_fim = g
                                     dia = 1
+                                    Cinzar_dias_outro_mes(n, p)
                                 }
                             }
                             dia_da_semana = 0
@@ -201,8 +240,108 @@ function Completar_Calendario(index, dt, n, d, sentido_clique){
             }
         }
         Completar_Calendario(null, null, backup_dia_da_semana, meses.dias_no_mes[Dois_Meses_Atras_dias_totais(index)], 1)
-        //Preciso saber quantos dias tem dois meses anteriores ao que foi clicado em retornar, para poder completar o calendario, por isso chamei esse função.
+        //Preciso saber quantos dias tem dois meses anteriores ao que foi clicado em retornar, para poder completar o calendario, por isso chamei a função acima.
+        Estilo_Primeira_linha()
     }
+}
 
+function Estilo_pre_pronto(){
+    //Estilo Pronto do mês de janeiro de 2021, pois aindo não foi clicado em avnçar ou retornar para se obter os valores necessários para aplicar o estilo dinamicamente.
+    document.getElementById("semana1").childNodes[0].style = "color: rgb(236, 122, 122);"
+    for(let c = 2; c < 10; c = c + 2){
+        document.getElementById("semana1").childNodes[c].style = "color: gray;"
+    }
+    for(let c = 2; c <= 12; c = c + 2){
+        document.getElementById("semana6").childNodes[c].style = "color: gray;"
+    }
+}
+
+function Estilo(){
+    //Reseta o estilo das cores dos dias, para poder ser aplicado de acordo com cada mês.
+    for(let c = 1; c <= 6; c++){
+        for(let i = 2; i <= 12; i = i + 2){
+            document.getElementById("semana" + c).childNodes[i].style = "color: black;"
+        }
+    }
+    for(let c = 1; c < 7; c++){
+        document.getElementById("semana" + c).childNodes[0].style = "color: red;"
+    }
+}
+
+function Cinzar_dias_outro_mes(pos1, linha_pos1){
+    /* pos1 => recebe a posição do primeiro dia do mes seguinto do que é exibido na tela
+
+    linha_pos1 => identifica a linha do primeiro dia do mes seguinte do que é exibido na tela  */
+    
+    Estilo()
+    if(pos1 > 12){
+        //Quando o mes exibido na tela termina num sábado.
+        linha_pos1++
+        pos1 = 0
+    }
+    for (let c = linha_pos1 ; c <= 6; c++){
+        for(let i = pos1; i <= 12; i = i + 2){
+            if(i == 0){
+                //Domingos
+                document.getElementById("semana" + c).childNodes[i].style = "color: rgb(236, 122, 122);" 
+            }else{
+                document.getElementById("semana" + c).childNodes[i].style = "color: gray;"
+            }
+            if(i == 12){
+                pos1 = 0
+            }
+        }
+    }
+}
+function Estilo_Primeira_linha(){
+    // Define o estilo da primeira linha do calendário, caso o mês não comece num Domingo.
+    var indice = 0
+    var cores = ["color: gray;", "color: rgb(236, 122, 122);"]
+    var Txt_numero = document.getElementById("semana1").childNodes[indice].innerHTML
+    while(Number(Txt_numero) != 1){
+        indice == 0 ? document.getElementById("semana1").childNodes[indice].style = cores[1] : document.getElementById("semana1").childNodes[indice].style = cores[0];
+        indice += 2
+        Txt_numero = document.getElementById("semana1").childNodes[indice].innerHTML
+    }
+}
+function Abrir_no_mes_Atual(V_ano_label, prox_mes){
+    var data = new Date()
+    var dia = data.getDate()// Tem o dia
+    var mes = new Date()
+    var N_mes = mes.getMonth()//Tem o mes em forma de array
+    var ano = new Date()
+    var N_ano = ano.getFullYear() // Tem o ano
+    if(N_ano == Number(V_ano_label.innerHTML)){
+        for(let c = 0; c < N_mes; c++){
+            prox_mes.click()
+        }
+    }else{
+        Diferenca_entre_anos = N_ano - Number(V_ano_label.innerHTML)
+        let Total_cliques = (Diferenca_entre_anos*12) + N_mes
+        for(let c = 0; c < Total_cliques; c++){
+            prox_mes.click()
+        }
+    }
+    var Dias_Iguais = []
+    var posicão_Linha = []
+    var posicao_Dia_da_Semana = []
+    for( let c = 1; c <= 6; c++){
+        for(let i = 0; i <= 12; i += 2){
+            var TXT_dias_Calendario = document.getElementById("semana" + c).childNodes[i].innerHTML
+            var N_dias_Calendario = Number(TXT_dias_Calendario)
+            if(N_dias_Calendario == dia){
+                Dias_Iguais.push(N_dias_Calendario)
+                posicão_Linha.push(c)
+                posicao_Dia_da_Semana.push(i)
+            }
+        }
+    }
+    if(Dias_Iguais.length > 1 && dia > 15){
+        //Dois dias repetidos e fim do mes, usar o indice 1
+        document.getElementById("semana" + posicão_Linha[1]).childNodes[posicao_Dia_da_Semana[1]].style = "color: blue"
+    }else if (Dias_Iguais.length > 1 && dia < 15 || Dias_Iguais.length == 1){
+        //Dois dias repetidos e inicio do mes, usar o indice 0
+        document.getElementById("semana" + posicão_Linha[0]).childNodes[posicao_Dia_da_Semana[0]].style = "color: blue"
+    }
 }
 window.addEventListener("load", Iniciar_Eventos())
