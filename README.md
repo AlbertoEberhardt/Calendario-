@@ -8,6 +8,6 @@
 
  Aperte em ">" para avançar um mês.
 
- De um clique duplo com o mouse no ano, para digitar um ano.
- 
+ De um duplo clique com o mouse no ano, para digitar um ano.
+
  Quando voçê abre o calendário a data atual está marcada de azul.
